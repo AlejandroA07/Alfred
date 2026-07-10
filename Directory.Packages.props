@@ -10,11 +10,11 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
-    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
 
   <!-- Solution-wide static analysis. Disable per build with -p:DisableExtraAnalyzers=true -->
   <ItemGroup Condition="'$(DisableExtraAnalyzers)' != 'true'">
-    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="10.28.0.143324" />
+    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="10.29.0.143774" />
   </ItemGroup>
 </Project>
