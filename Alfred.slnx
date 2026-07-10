@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Alfred.Api/Alfred.Api.csproj" />
+    <Project Path="src/Alfred.Modules.Assistant/Alfred.Modules.Assistant.csproj" />
+    <Project Path="src/Alfred.Modules.Calendar/Alfred.Modules.Calendar.csproj" />
+    <Project Path="src/Alfred.Modules.Finance/Alfred.Modules.Finance.csproj" />
+    <Project Path="src/Alfred.Modules.Households/Alfred.Modules.Households.csproj" />
+    <Project Path="src/Alfred.Modules.Identity/Alfred.Modules.Identity.csproj" />
+    <Project Path="src/Alfred.Modules.Notifications/Alfred.Modules.Notifications.csproj" />
+    <Project Path="src/Alfred.Modules.Purchases/Alfred.Modules.Purchases.csproj" />
+    <Project Path="src/Alfred.Modules.Reminders/Alfred.Modules.Reminders.csproj" />
+    <Project Path="src/Alfred.SharedKernel/Alfred.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Alfred.Tests/Alfred.Tests.csproj" />
+  </Folder>
+</Solution>

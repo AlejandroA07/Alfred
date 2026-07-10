@@ -1,0 +1,17 @@
+root = true
+
+[*]
+charset = utf-8
+insert_final_newline = true
+indent_style = space
+
+[*.cs]
+indent_size = 4
+
+# CA1707: underscores in identifiers — conflicts with xUnit test naming convention
+dotnet_diagnostic.CA1707.severity = suggestion
+# CA1848: LoggerMessage delegates — perf micro-optimization, not worth a codebase-wide refactor
+dotnet_diagnostic.CA1848.severity = suggestion
+
+[*.{ts,tsx,js,jsx,json,yml,yaml}]
+indent_size = 2

@@ -1,0 +1,6 @@
+# pnpm settings (pnpm 11+ reads config from this file).
+# Supply-chain posture — see docs/dev/m0-report.md §Package manager:
+#   - dependency lifecycle scripts are blocked by default in pnpm 10+ (allowBuilds allowlist)
+#   - minimumReleaseAge: refuse versions published less than N minutes ago, so a
+#     hijacked release gets caught/yanked by the community before it can reach us.
+minimumReleaseAge: 4320 # 3 days
