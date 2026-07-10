@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Built-in .NET analyzers incl. security rules. Disable per build with -p:DisableExtraAnalyzers=true -->
+    <AnalysisLevel Condition="'$(DisableExtraAnalyzers)' != 'true'">latest-recommended</AnalysisLevel>
+  </PropertyGroup>
+</Project>

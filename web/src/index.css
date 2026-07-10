@@ -1,0 +1,10 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: light-dark(#f5f4f0, #1c1c1e);
+  color: light-dark(#1c1c1e, #f5f4f0);
+}
