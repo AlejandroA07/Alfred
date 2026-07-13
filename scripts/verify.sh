@@ -6,6 +6,7 @@ cd "$(dirname "$0")/.."
 
 echo "[verify] 1/5 restore locked dependencies (same as CI)"
 dotnet restore --locked-mode
+(cd web && pnpm install --frozen-lockfile)
 
 echo "[verify] 2/5 backend build"
 dotnet build --configuration Release --no-incremental --no-restore
