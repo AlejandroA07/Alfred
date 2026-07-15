@@ -47,7 +47,7 @@ jobs:
         run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults --collect:"XPlat Code Coverage"
 
       - name: Install ReportGenerator
-        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool --version 5.5.10
 
       - name: Merge coverage reports
         run: reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"CoverageReport" -reporttypes:Cobertura
@@ -134,7 +134,7 @@ jobs:
 
       - name: Check for vulnerable packages
         run: |
-          dotnet list package --vulnerable --include-transitive --format json > vuln.json
+          dotnet list package --vulnerable --include-transitive --format json --output-version 1 > vuln.json
           count=$(python3 - <<'PY'
           import json
           d = json.load(open('vuln.json'))

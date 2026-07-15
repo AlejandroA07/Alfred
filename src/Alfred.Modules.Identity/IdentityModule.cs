@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -8,8 +9,10 @@ namespace Alfred.Modules.Identity;
 
 public static class IdentityModule
 {
-    public static IServiceCollection AddIdentityModule(this IServiceCollection services, string connectionString)
+    public static IServiceCollection AddIdentityModule(
+        this IServiceCollection services, string connectionString, string? registrationInviteCode)
     {
+        services.AddSingleton(new IdentityModuleOptions(registrationInviteCode));
         services.AddDbContext<AlfredIdentityDbContext>(o => o.UseNpgsql(connectionString));
 
         services.AddAuthorization();
@@ -26,7 +29,19 @@ public static class IdentityModule
 
     public static IEndpointRouteBuilder MapIdentityModule(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGroup("/api/auth").MapIdentityApi<AlfredUser>();
+        var options = endpoints.ServiceProvider.GetRequiredService<IdentityModuleOptions>();
+
+        var group = endpoints.MapGroup("/api/auth")
+            .AddEndpointFilter(new InviteCodeEndpointFilter(options.RegistrationInviteCode));
+        group.MapIdentityApi<AlfredUser>();
+
+        // MapIdentityApi has no sign-out endpoint of its own.
+        group.MapPost("/logout", async (SignInManager<AlfredUser> signInManager) =>
+        {
+            await signInManager.SignOutAsync();
+            return Results.NoContent();
+        }).RequireAuthorization();
+
         return endpoints;
     }
 }
