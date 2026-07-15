@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("AlfredDb")
     ?? throw new InvalidOperationException("Connection string 'AlfredDb' is not configured.");
 
-builder.Services.AddIdentityModule(connectionString);
+builder.Services.AddIdentityModule(connectionString, builder.Configuration["Identity:InviteCode"]);
 
 var app = builder.Build();
 

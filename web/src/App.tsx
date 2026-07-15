@@ -16,6 +16,7 @@ export default function App() {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -33,7 +34,7 @@ export default function App() {
       if (mode === 'register') {
         const res = await fetch('/api/auth/register', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Invite-Code': inviteCode },
           body: JSON.stringify({ email, password }),
         })
         if (!res.ok) {
@@ -84,6 +85,18 @@ export default function App() {
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             />
           </label>
+          {mode === 'register' && (
+            <label>
+              Invite code
+              <input
+                type="text"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                required
+                autoComplete="off"
+              />
+            </label>
+          )}
           {error && <p className="error">{error}</p>}
           <button type="submit" disabled={busy}>
             {mode === 'login' ? 'Log in' : 'Create account'}
@@ -102,6 +115,17 @@ export default function App() {
       <p className="tagline">Good to see you, {session.email}.</p>
       <div className="card">
         <p>The skeleton is standing. Finance (M1) is next.</p>
+        <button
+          type="button"
+          onClick={async () => {
+            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+            setSession(null)
+            setMode('login')
+            setPassword('')
+          }}
+        >
+          Log out
+        </button>
       </div>
     </main>
   )
