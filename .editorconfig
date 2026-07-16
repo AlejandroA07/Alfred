@@ -13,5 +13,12 @@ dotnet_diagnostic.CA1707.severity = suggestion
 # CA1848: LoggerMessage delegates — perf micro-optimization, not worth a codebase-wide refactor
 dotnet_diagnostic.CA1848.severity = suggestion
 
+# EF Core writes these files; their style is not ours to fix, and regenerating a
+# migration would undo any hand-edit. CA1861/IDE0300 both fire on the `new[] { … }`
+# EF emits for multi-column indexes.
+[**/Migrations/*.cs]
+dotnet_diagnostic.CA1861.severity = none
+dotnet_diagnostic.IDE0300.severity = none
+
 [*.{ts,tsx,js,jsx,json,yml,yaml}]
 indent_size = 2
