@@ -32,6 +32,10 @@ public sealed class AlfredAppFactory : WebApplicationFactory<Program>, IAsyncLif
         builder.UseEnvironment("Development");
         builder.UseSetting("ConnectionStrings:AlfredDb", _db.GetConnectionString());
         builder.UseSetting("Identity:InviteCode", InviteCode);
+
+        // These tests register and log in many users from one (absent) client IP,
+        // so they would share a single bucket. The limiter has its own tests.
+        builder.UseSetting("Identity:AuthRequestsPerMinute", "10000");
     }
 
     /// <summary>
