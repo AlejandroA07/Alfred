@@ -7,7 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("AlfredDb")
     ?? throw new InvalidOperationException("Connection string 'AlfredDb' is not configured.");
 
-builder.Services.AddIdentityModule(connectionString, builder.Configuration["Identity:InviteCode"]);
+builder.Services.AddProblemDetails();
+builder.Services.AddIdentityModule(
+    connectionString,
+    builder.Configuration["Identity:InviteCode"],
+    builder.Configuration.GetValue("Identity:AuthRequestsPerMinute", 30));
 builder.Services.AddFinanceModule(connectionString);
 
 var app = builder.Build();
@@ -20,6 +24,17 @@ if (app.Environment.IsDevelopment())
     await scope.ServiceProvider.GetRequiredService<AlfredIdentityDbContext>().Database.MigrateAsync();
     await scope.ServiceProvider.GetRequiredService<AlfredFinanceDbContext>().Database.MigrateAsync();
 }
+
+// Outside Development, unhandled errors leave as ProblemDetails instead of a
+// bare status code. Development deliberately keeps the developer exception page
+// (registered ahead of this by WebApplication) so local stack traces survive.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler();
+}
+
+// Ahead of authentication, so flooding is cut off before any credential work.
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
