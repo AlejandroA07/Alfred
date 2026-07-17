@@ -6,6 +6,8 @@ public class AlfredFinanceDbContext(DbContextOptions<AlfredFinanceDbContext> opt
 {
     public DbSet<Category> Categories => Set<Category>();
 
+    public DbSet<Expense> Expenses => Set<Expense>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -21,6 +23,18 @@ public class AlfredFinanceDbContext(DbContextOptions<AlfredFinanceDbContext> opt
 
             // Every read is scoped by user, and a user's category names are unique.
             category.HasIndex(c => new { c.UserId, c.Name }).IsUnique();
+        });
+
+        modelBuilder.Entity<Expense>(expense =>
+        {
+            expense.HasKey(e => e.Id);
+            expense.Property(e => e.UserId).HasMaxLength(450).IsRequired();
+            expense.Property(e => e.Amount).HasColumnType("numeric(12,2)");
+            expense.Property(e => e.Note).HasMaxLength(Expense.NoteMaxLength);
+
+            // Every read is scoped by user and typically to a month; index the
+            // access pattern (owner, then most-recent-first by date).
+            expense.HasIndex(e => new { e.UserId, e.Date });
         });
     }
 }
