@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
+import Finance from './Finance'
 
 type Session = { email: string } | null
 
@@ -109,24 +110,12 @@ export default function App() {
     )
   }
 
-  return (
-    <main className="shell">
-      <h1>Alfred</h1>
-      <p className="tagline">Good to see you, {session.email}.</p>
-      <div className="card">
-        <p>The skeleton is standing. Finance (M1) is next.</p>
-        <button
-          type="button"
-          onClick={async () => {
-            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
-            setSession(null)
-            setMode('login')
-            setPassword('')
-          }}
-        >
-          Log out
-        </button>
-      </div>
-    </main>
-  )
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    setSession(null)
+    setMode('login')
+    setPassword('')
+  }
+
+  return <Finance email={session.email} onLogout={logout} />
 }
