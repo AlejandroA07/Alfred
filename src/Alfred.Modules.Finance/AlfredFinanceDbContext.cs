@@ -8,6 +8,8 @@ public class AlfredFinanceDbContext(DbContextOptions<AlfredFinanceDbContext> opt
 
     public DbSet<Expense> Expenses => Set<Expense>();
 
+    public DbSet<Income> Incomes => Set<Income>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -35,6 +37,18 @@ public class AlfredFinanceDbContext(DbContextOptions<AlfredFinanceDbContext> opt
             // Every read is scoped by user and typically to a month; index the
             // access pattern (owner, then most-recent-first by date).
             expense.HasIndex(e => new { e.UserId, e.Date });
+        });
+
+        modelBuilder.Entity<Income>(income =>
+        {
+            income.HasKey(i => i.Id);
+            income.Property(i => i.UserId).HasMaxLength(450).IsRequired();
+            income.Property(i => i.Amount).HasColumnType("numeric(12,2)");
+            income.Property(i => i.Source).HasMaxLength(Income.SourceMaxLength).IsRequired();
+
+            // Every read is scoped by user and typically to a month; index that access
+            // pattern (owner, then most-recent-first by date).
+            income.HasIndex(i => new { i.UserId, i.Date });
         });
     }
 }
