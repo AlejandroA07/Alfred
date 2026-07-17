@@ -137,10 +137,6 @@ public static partial class CategoryEndpoints
         ["name"] = ["You already have a category with that name."],
     });
 
-    private static string RequireUserId(this ClaimsPrincipal user) =>
-        user.FindFirstValue(ClaimTypes.NameIdentifier)
-        ?? throw new InvalidOperationException("Authenticated request has no user id claim.");
-
     [GeneratedRegex("^#[0-9a-fA-F]{6}$")]
     private static partial Regex HexColor();
 }

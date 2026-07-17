@@ -3,6 +3,7 @@ using System;
 using Alfred.Modules.Finance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Alfred.Modules.Finance.Migrations
 {
     [DbContext(typeof(AlfredFinanceDbContext))]
-    partial class AlfredFinanceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260717183749_AddExpense")]
+    partial class AddExpense
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

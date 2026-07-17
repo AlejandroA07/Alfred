@@ -20,6 +20,7 @@ public static class FinanceModule
         var group = endpoints.MapGroup("/api/finance").RequireAuthorization();
 
         group.MapCategoryEndpoints();
+        group.MapExpenseEndpoints();
 
         return endpoints;
     }
