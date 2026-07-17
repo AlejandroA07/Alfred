@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import Categories, { type Category } from './Categories'
 import MoneyMap, { type MoneyMapData } from './MoneyMap'
+import { problemText } from './problem'
 import './Finance.css'
 
-type Category = { id: string; name: string; color: string; monthlyBudget: number | null }
 type Expense = { id: string; categoryId: string; amount: number; date: string; note: string | null }
 
 const currency = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' })
@@ -16,12 +17,6 @@ function today(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-/** Pulls a human-readable message out of an ASP.NET ProblemDetails payload. */
-async function problemText(res: Response, fallback: string): Promise<string> {
-  const problem = (await res.json().catch(() => null)) as { errors?: Record<string, string[]> } | null
-  return problem?.errors ? Object.values(problem.errors).flat().join(' ') : fallback
-}
-
 export default function Finance({ email, onLogout }: { email: string; onLogout: () => void }) {
   const [categories, setCategories] = useState<Category[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -32,9 +27,6 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(today())
   const [note, setNote] = useState('')
-
-  const [newCategoryName, setNewCategoryName] = useState('')
-  const [newCategoryColor, setNewCategoryColor] = useState('#3a6ea5')
 
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -53,6 +45,11 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
     const res = await fetch(`/api/finance/money-map?month=${month}`, { credentials: 'include' })
     if (res.ok) setMoneyMap((await res.json()) as MoneyMapData)
   }, [month])
+
+  // A category add/edit changes both the picker list and the money map's budget bars.
+  const reloadCategories = useCallback(async () => {
+    await Promise.all([loadCategories(), loadMoneyMap()])
+  }, [loadCategories, loadMoneyMap])
 
   useEffect(() => {
     void loadCategories()
@@ -79,28 +76,6 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
   )
 
   const total = useMemo(() => expenses.reduce((sum, e) => sum + e.amount, 0), [expenses])
-
-  async function addCategory(e: FormEvent) {
-    e.preventDefault()
-    setBusy(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/finance/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ name: newCategoryName, color: newCategoryColor, monthlyBudget: null }),
-      })
-      if (!res.ok) {
-        setError(await problemText(res, 'Could not add category.'))
-        return
-      }
-      setNewCategoryName('')
-      await Promise.all([loadCategories(), loadMoneyMap()])
-    } finally {
-      setBusy(false)
-    }
-  }
 
   async function logExpense(e: FormEvent) {
     e.preventDefault()
@@ -149,34 +124,7 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
 
       {error && <p className="error">{error}</p>}
 
-      {categories.length === 0 ? (
-        <form onSubmit={addCategory} className="card">
-          <h2>Add your first category</h2>
-          <p className="hint">Expenses are logged against a category. Create one to get started.</p>
-          <label>
-            Name
-            <input
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              required
-              maxLength={60}
-              placeholder="Groceries"
-            />
-          </label>
-          <label>
-            Colour
-            <input
-              type="color"
-              value={newCategoryColor}
-              onChange={(e) => setNewCategoryColor(e.target.value)}
-              className="color-input"
-            />
-          </label>
-          <button type="submit" disabled={busy}>
-            Add category
-          </button>
-        </form>
-      ) : (
+      {categories.length > 0 && (
         <form onSubmit={logExpense} className="card">
           <h2>Log an expense</h2>
           <label>
@@ -258,6 +206,8 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
           </ul>
         )}
       </section>
+
+      <Categories categories={categories} onChanged={reloadCategories} />
     </main>
   )
 }
