@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -24,7 +23,7 @@ public static class ExpenseEndpoints
 
             if (month is not null)
             {
-                if (!TryParseMonth(month, out var start, out var end))
+                if (!MonthRange.TryParse(month, out var start, out var end))
                 {
                     return MonthInvalid();
                 }
@@ -170,19 +169,5 @@ public static class ExpenseEndpoints
     {
         var trimmed = note?.Trim();
         return string.IsNullOrEmpty(trimmed) ? null : trimmed;
-    }
-
-    private static bool TryParseMonth(string month, out DateOnly start, out DateOnly end)
-    {
-        end = default;
-
-        if (!DateOnly.TryParseExact(
-            month + "-01", "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out start))
-        {
-            return false;
-        }
-
-        end = start.AddMonths(1);
-        return true;
     }
 }
