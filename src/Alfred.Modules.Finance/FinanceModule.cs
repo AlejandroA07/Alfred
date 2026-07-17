@@ -21,6 +21,7 @@ public static class FinanceModule
 
         group.MapCategoryEndpoints();
         group.MapExpenseEndpoints();
+        group.MapIncomeEndpoints();
         group.MapMoneyMapEndpoints();
 
         return endpoints;
