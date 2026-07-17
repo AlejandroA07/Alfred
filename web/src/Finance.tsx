@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import MoneyMap, { type MoneyMapData } from './MoneyMap'
 import './Finance.css'
 
 type Category = { id: string; name: string; color: string; monthlyBudget: number | null }
@@ -24,6 +25,7 @@ async function problemText(res: Response, fallback: string): Promise<string> {
 export default function Finance({ email, onLogout }: { email: string; onLogout: () => void }) {
   const [categories, setCategories] = useState<Category[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [moneyMap, setMoneyMap] = useState<MoneyMapData | null>(null)
   const [month, setMonth] = useState(currentMonth())
 
   const [categoryId, setCategoryId] = useState('')
@@ -47,6 +49,11 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
     if (res.ok) setExpenses((await res.json()) as Expense[])
   }, [month])
 
+  const loadMoneyMap = useCallback(async () => {
+    const res = await fetch(`/api/finance/money-map?month=${month}`, { credentials: 'include' })
+    if (res.ok) setMoneyMap((await res.json()) as MoneyMapData)
+  }, [month])
+
   useEffect(() => {
     void loadCategories()
   }, [loadCategories])
@@ -54,6 +61,10 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
   useEffect(() => {
     void loadExpenses()
   }, [loadExpenses])
+
+  useEffect(() => {
+    void loadMoneyMap()
+  }, [loadMoneyMap])
 
   // Keep the form's selected category valid as the category list loads/changes.
   useEffect(() => {
@@ -85,7 +96,7 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
         return
       }
       setNewCategoryName('')
-      await loadCategories()
+      await Promise.all([loadCategories(), loadMoneyMap()])
     } finally {
       setBusy(false)
     }
@@ -113,7 +124,7 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
       }
       setAmount('')
       setNote('')
-      await loadExpenses()
+      await Promise.all([loadExpenses(), loadMoneyMap()])
     } finally {
       setBusy(false)
     }
@@ -121,7 +132,7 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
 
   async function deleteExpense(id: string) {
     const res = await fetch(`/api/finance/expenses/${id}`, { method: 'DELETE', credentials: 'include' })
-    if (res.ok) await loadExpenses()
+    if (res.ok) await Promise.all([loadExpenses(), loadMoneyMap()])
   }
 
   return (
@@ -215,6 +226,8 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
           </label>
           <span className="total">{currency.format(total)}</span>
         </div>
+
+        {moneyMap && <MoneyMap data={moneyMap} />}
 
         {expenses.length === 0 ? (
           <p className="hint">No expenses logged for this month.</p>
