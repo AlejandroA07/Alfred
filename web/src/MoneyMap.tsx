@@ -10,7 +10,9 @@ export type MoneyMapCategory = {
 
 export type MoneyMapData = {
   month: string
+  totalIncome: number
   totalSpent: number
+  unallocated: number
   totalBudget: number | null
   categories: MoneyMapCategory[]
 }
@@ -25,10 +27,40 @@ function fill(spent: number, budget: number): number {
 }
 
 export default function MoneyMap({ data }: { data: MoneyMapData }) {
-  if (data.categories.length === 0) return null
+  if (data.categories.length === 0 && data.totalIncome === 0) return null
+
+  const short = data.unallocated < 0
 
   return (
     <div className="money-map">
+      {(data.totalIncome > 0 || data.totalSpent > 0) && (
+        <div className="money-flow">
+          <div className="money-flow-track" role="presentation">
+            <div
+              className={`money-flow-bar${short ? ' over' : ''}`}
+              style={{ width: `${fill(data.totalSpent, data.totalIncome) * 100}%` }}
+            />
+          </div>
+          <dl className="money-flow-figures">
+            <div>
+              <dt>Income</dt>
+              <dd>{currency.format(data.totalIncome)}</dd>
+            </div>
+            <div>
+              <dt>Spent</dt>
+              <dd>
+                {data.totalSpent > 0 && '−'}
+                {currency.format(data.totalSpent)}
+              </dd>
+            </div>
+            <div className={`money-flow-left${short ? ' over' : ''}`}>
+              <dt>{short ? 'Overspent' : 'Unallocated'}</dt>
+              <dd>{currency.format(data.unallocated)}</dd>
+            </div>
+          </dl>
+        </div>
+      )}
+
       <ul className="money-map-list">
         {data.categories.map((c) => {
           const budget = c.monthlyBudget

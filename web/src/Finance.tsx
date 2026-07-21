@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import Categories, { type Category } from './Categories'
+import IncomeCard, { type Income } from './Income'
 import MoneyMap, { type MoneyMapData } from './MoneyMap'
 import { problemText } from './problem'
 import './Finance.css'
@@ -20,6 +21,7 @@ function today(): string {
 export default function Finance({ email, onLogout }: { email: string; onLogout: () => void }) {
   const [categories, setCategories] = useState<Category[]>([])
   const [expenses, setExpenses] = useState<Expense[]>([])
+  const [incomes, setIncomes] = useState<Income[]>([])
   const [moneyMap, setMoneyMap] = useState<MoneyMapData | null>(null)
   const [month, setMonth] = useState(currentMonth())
 
@@ -41,6 +43,11 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
     if (res.ok) setExpenses((await res.json()) as Expense[])
   }, [month])
 
+  const loadIncomes = useCallback(async () => {
+    const res = await fetch(`/api/finance/incomes?month=${month}`, { credentials: 'include' })
+    if (res.ok) setIncomes((await res.json()) as Income[])
+  }, [month])
+
   const loadMoneyMap = useCallback(async () => {
     const res = await fetch(`/api/finance/money-map?month=${month}`, { credentials: 'include' })
     if (res.ok) setMoneyMap((await res.json()) as MoneyMapData)
@@ -51,9 +58,18 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
     await Promise.all([loadCategories(), loadMoneyMap()])
   }, [loadCategories, loadMoneyMap])
 
+  // Income changes move the map's top line, so both reload together.
+  const reloadIncomes = useCallback(async () => {
+    await Promise.all([loadIncomes(), loadMoneyMap()])
+  }, [loadIncomes, loadMoneyMap])
+
   useEffect(() => {
     void loadCategories()
   }, [loadCategories])
+
+  useEffect(() => {
+    void loadIncomes()
+  }, [loadIncomes])
 
   useEffect(() => {
     void loadExpenses()
@@ -206,6 +222,14 @@ export default function Finance({ email, onLogout }: { email: string; onLogout: 
           </ul>
         )}
       </section>
+
+      {/* Remounted per month so the form's default date follows the month being viewed. */}
+      <IncomeCard
+        key={month}
+        incomes={incomes}
+        defaultDate={month === currentMonth() ? today() : `${month}-01`}
+        onChanged={reloadIncomes}
+      />
 
       <Categories categories={categories} onChanged={reloadCategories} />
     </main>

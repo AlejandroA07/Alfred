@@ -26,6 +26,14 @@ public class MoneyMapEndpointsTests(AlfredAppFactory app)
         response.EnsureSuccessStatusCode();
     }
 
+    private static async Task CreateIncomeAsync(
+        HttpClient client, decimal amount, string date, string source = "Salary")
+    {
+        var response = await client.PostAsJsonAsync(
+            "/api/finance/incomes", new { amount, date, source });
+        response.EnsureSuccessStatusCode();
+    }
+
     private static Task<MoneyMapEndpoints.MoneyMapResponse?> GetMoneyMapAsync(HttpClient client, string month) =>
         client.GetFromJsonAsync<MoneyMapEndpoints.MoneyMapResponse>($"/api/finance/money-map?month={month}");
 
@@ -114,6 +122,61 @@ public class MoneyMapEndpointsTests(AlfredAppFactory app)
         var only = Assert.Single(map.Categories);
         Assert.Null(only.MonthlyBudget);
         Assert.Equal(0m, only.Spent);
+    }
+
+    [Fact]
+    public async Task Sums_the_months_income_and_leaves_the_rest_unallocated()
+    {
+        var client = await app.CreateLoggedInClientAsync();
+        var categoryId = await CreateCategoryAsync(client, "Food", monthlyBudget: 400m);
+        await CreateIncomeAsync(client, 2000m, "2026-07-25");
+        await CreateIncomeAsync(client, 150.50m, "2026-07-28", source: "Side project");
+        await CreateExpenseAsync(client, categoryId, 42.50m, "2026-07-05");
+
+        var map = await GetMoneyMapAsync(client, "2026-07");
+
+        Assert.Equal(2150.50m, map!.TotalIncome);
+        Assert.Equal(42.50m, map.TotalSpent);
+        Assert.Equal(2108m, map.Unallocated);
+    }
+
+    [Fact]
+    public async Task Income_from_another_month_is_excluded()
+    {
+        var client = await app.CreateLoggedInClientAsync();
+        await CreateIncomeAsync(client, 2000m, "2026-07-25");
+        await CreateIncomeAsync(client, 999m, "2026-06-25");
+
+        var map = await GetMoneyMapAsync(client, "2026-07");
+
+        Assert.Equal(2000m, map!.TotalIncome);
+        Assert.Equal(2000m, map.Unallocated);
+    }
+
+    [Fact]
+    public async Task Another_users_income_is_never_included()
+    {
+        var owner = await app.CreateLoggedInClientAsync();
+        var stranger = await app.CreateLoggedInClientAsync();
+        await CreateIncomeAsync(owner, 2000m, "2026-07-25");
+
+        var map = await GetMoneyMapAsync(stranger, "2026-07");
+
+        Assert.Equal(0m, map!.TotalIncome);
+        Assert.Equal(0m, map.Unallocated);
+    }
+
+    [Fact]
+    public async Task Unallocated_goes_negative_when_spending_exceeds_income()
+    {
+        var client = await app.CreateLoggedInClientAsync();
+        var categoryId = await CreateCategoryAsync(client, "Food", monthlyBudget: 400m);
+        await CreateIncomeAsync(client, 100m, "2026-07-01");
+        await CreateExpenseAsync(client, categoryId, 250m, "2026-07-10");
+
+        var map = await GetMoneyMapAsync(client, "2026-07");
+
+        Assert.Equal(-150m, map!.Unallocated);
     }
 
     [Fact]

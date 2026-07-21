@@ -8,15 +8,20 @@ using Microsoft.EntityFrameworkCore;
 namespace Alfred.Modules.Finance;
 
 /// <summary>
-/// The money map: a read-only view of a month's spend per category against each
-/// category's monthly budget, plus the month totals. No writable state of its own.
+/// The money map: a read-only view of a month's income and spend per category against
+/// each category's monthly budget, plus the month totals. No writable state of its own.
 /// </summary>
 public static class MoneyMapEndpoints
 {
     public record MoneyMapCategory(Guid CategoryId, string Name, string Color, decimal? MonthlyBudget, decimal Spent);
 
     public record MoneyMapResponse(
-        string Month, decimal TotalSpent, decimal? TotalBudget, IReadOnlyList<MoneyMapCategory> Categories);
+        string Month,
+        decimal TotalIncome,
+        decimal TotalSpent,
+        decimal Unallocated,
+        decimal? TotalBudget,
+        IReadOnlyList<MoneyMapCategory> Categories);
 
     internal static IEndpointRouteBuilder MapMoneyMapEndpoints(this IEndpointRouteBuilder group)
     {
@@ -44,6 +49,10 @@ public static class MoneyMapEndpoints
                 .Select(g => new { CategoryId = g.Key, Spent = g.Sum(e => e.Amount) })
                 .ToDictionaryAsync(x => x.CategoryId, x => x.Spent, ct);
 
+            var totalIncome = await db.Incomes
+                .Where(i => i.UserId == userId && i.Date >= start && i.Date < end)
+                .SumAsync(i => i.Amount, ct);
+
             var categories = await db.Categories
                 .Where(c => c.UserId == userId)
                 .OrderBy(c => c.Name)
@@ -61,8 +70,14 @@ public static class MoneyMapEndpoints
                 ? categories.Sum(c => c.MonthlyBudget ?? 0m)
                 : (decimal?)null;
 
+            // The honest leftover of real money: what came in, minus what actually went
+            // out. Fixed costs, savings and planned purchases subtract from it too once
+            // those slices exist (docs/planning/04-finance-and-sharing-model.md §1b).
+            var unallocated = totalIncome - totalSpent;
+
             return Results.Ok(new MoneyMapResponse(
-                start.ToString("yyyy-MM", CultureInfo.InvariantCulture), totalSpent, totalBudget, rows));
+                start.ToString("yyyy-MM", CultureInfo.InvariantCulture),
+                totalIncome, totalSpent, unallocated, totalBudget, rows));
         });
 
         return group;
