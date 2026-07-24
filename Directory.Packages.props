@@ -17,6 +17,6 @@
 
   <!-- Solution-wide static analysis. Disable per build with -p:DisableExtraAnalyzers=true -->
   <ItemGroup Condition="'$(DisableExtraAnalyzers)' != 'true'">
-    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="10.29.0.143774" />
+    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="10.30.0.144632" />
   </ItemGroup>
 </Project>
