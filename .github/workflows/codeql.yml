@@ -6,52 +6,43 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "17 6 * * 1" # weekly, Monday morning
+    - cron: "17 6 * * 1"
 
-# One run per branch/PR; superseded runs are cancelled to save minutes.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: read # default for all jobs — analyze widens only what CodeQL needs
+  contents: read
 
 jobs:
   analyze:
     name: CodeQL analyze
     runs-on: ubuntu-latest
     permissions:
-      security-events: write # upload SARIF results to code scanning
-      contents: read # checkout
-      actions: read # required for the SARIF upload in private repositories
+      actions: read
+      contents: read
+      security-events: write
     strategy:
       fail-fast: false
       matrix:
         language: [csharp, javascript-typescript]
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-
       - name: Setup .NET
         if: matrix.language == 'csharp'
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           global-json-file: global.json
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a # v3
+      - uses: github/codeql-action/init@bce182f857edf1feab116e9795a3393d21977282 # v4
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
-
       - name: Build
         if: matrix.language == 'csharp'
         run: |
           dotnet restore --locked-mode
           dotnet build --no-restore --configuration Release
-
-      - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a # v3
+      - uses: github/codeql-action/analyze@bce182f857edf1feab116e9795a3393d21977282 # v4
