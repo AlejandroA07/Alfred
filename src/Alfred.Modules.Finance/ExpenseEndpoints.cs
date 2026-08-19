@@ -58,7 +58,7 @@ public static class ExpenseEndpoints
             {
                 Id = Guid.CreateVersion7(),
                 UserId = userId,
-                CategoryId = request.CategoryId!.Value,
+                CategoryId = request.CategoryId.Value,
                 Amount = request.Amount!.Value,
                 Date = request.Date!.Value,
                 Note = NormaliseNote(request.Note),
@@ -93,7 +93,7 @@ public static class ExpenseEndpoints
                 return UnknownCategory();
             }
 
-            expense.CategoryId = request.CategoryId!.Value;
+            expense.CategoryId = request.CategoryId.Value;
             expense.Amount = request.Amount!.Value;
             expense.Date = request.Date!.Value;
             expense.Note = NormaliseNote(request.Note);
